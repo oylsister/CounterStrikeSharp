@@ -213,7 +213,7 @@ void DHookGetParam(ScriptContext& script_context)
 
 void DHookSetParam(ScriptContext& script_context)
 {
-    auto hook = script_context.GetArgument<dyno::Hook*>(0);
+    auto hook = script_context.GetArgument<dyno::IHook*>(0);
     auto dataType = script_context.GetArgument<DataType_t>(1);
     auto paramIndex = script_context.GetArgument<int>(2);
     if (hook == nullptr) {

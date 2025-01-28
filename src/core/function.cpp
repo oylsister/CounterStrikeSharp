@@ -304,7 +304,7 @@ void ValveFunction::AddHook(CallbackT callable, bool post)
 }
 void ValveFunction::RemoveHook(CallbackT callable, bool post) {
     dyno::IHookManager& manager = dyno::HookManager::Get();
-    dyno::IHook* hook = manager.hook((void*)m_ulAddr, [this] {
+    dyno::IHook* hook = manager.hookDetour((void*)m_ulAddr, [this] {
 #ifdef _WIN32
         return new dyno::x64WindowsCall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
 #else

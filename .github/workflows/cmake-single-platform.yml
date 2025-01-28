@@ -1,6 +1,7 @@
 name: Build & Publish
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
       - "docfx/**"
@@ -25,6 +26,10 @@ jobs:
         uses: onyxmueller/build-tag-number@v1
         with:
           token: ${{secrets.github_token}}
+          
+      - name: Set entitykv build number
+        if: ${{ github.ref == 'refs/heads/entitykv' }}
+        run: echo "BUILD_NUMBER=500" >> $GITHUB_ENV
 
   build_windows:
     needs: setup
@@ -35,13 +40,17 @@ jobs:
         run: echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Fallback build number
-        if: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+        if: ${{ github.event_name == 'pull_request' || (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/entitykv') }}
         shell: bash
         run: echo "BUILD_NUMBER=0" >> $GITHUB_ENV
 
       - name: Main build number
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: echo "BUILD_NUMBER=${{ needs.setup.outputs.buildnumber }}" >> $GITHUB_ENV
+
+      - name: Entitykv build number
+        if: ${{ github.ref == 'refs/heads/entitykv' }}
+        run: echo "Entitykv branch BUILD_NUMBER=${{ env.BUILD_NUMBER }}"
 
       - name: Visual Studio environment
         shell: cmd
@@ -91,13 +100,17 @@ jobs:
         run: echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Fallback build number
-        if: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+        if: ${{ github.event_name == 'pull_request' || (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/entitykv') }}
         shell: bash
         run: echo "BUILD_NUMBER=0" >> $GITHUB_ENV
 
       - name: Main build number
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: echo "BUILD_NUMBER=${{ needs.setup.outputs.buildnumber }}" >> $GITHUB_ENV
+
+      - name: Entitykv build number
+        if: ${{ github.ref == 'refs/heads/entitykv' }}
+        run: echo "Entitykv branch BUILD_NUMBER=${{ env.BUILD_NUMBER }}"
 
       - uses: actions/checkout@v3
         with:

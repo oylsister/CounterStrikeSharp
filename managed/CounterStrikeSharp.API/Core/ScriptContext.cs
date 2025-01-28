@@ -448,6 +448,19 @@ namespace CounterStrikeSharp.API.Core
 				return Activator.CreateInstance(type, pointer);
 			}
 
+			if (type == typeof(Color))
+			{
+				var pointer = (IntPtr)GetResult(typeof(IntPtr), ptr);
+				return Marshaling.ColorMarshaler.NativeToManaged(pointer);
+			}
+
+			// this one only works if the 'Raw'/uint is passed, otherwise big bum
+			// maybe do this with a marshaler?!
+			if (type == typeof(CEntityHandle))
+			{
+				return new CEntityHandle((uint)GetResult(typeof(uint), ptr));
+			}
+
 			if (type == typeof(object))
 			{
 				// var dataPtr = *(IntPtr*)&ptr[0];

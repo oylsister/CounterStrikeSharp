@@ -90,7 +90,7 @@ jobs:
 
   build_linux:
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # Could not figure out how to run in a container only on some matrix paths, so I've split it out into its own build.
     container:
       image: registry.gitlab.steamos.cloud/steamrt/sniper/sdk:latest

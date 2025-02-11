@@ -34,7 +34,7 @@
 
 #include "pch.h"
 #include "dynohook/core.h"
-#include "dynohook/manager.h"
+#include "dynohook/imanager.h"
 
 #ifdef _WIN32
 #include "dynohook/conventions/x64_windows_call.h"

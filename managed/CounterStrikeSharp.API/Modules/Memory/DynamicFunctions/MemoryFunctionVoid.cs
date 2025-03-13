@@ -15,6 +15,10 @@ public class MemoryFunctionVoid : BaseMemoryFunction
     {
     }
 
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID, Array.Empty<DataType>())
+    {
+    }
+
     public void Invoke()
     {
         InvokeInternalVoid();
@@ -29,6 +33,11 @@ public class MemoryFunctionVoid<T1> : BaseMemoryFunction
     }
 
     public MemoryFunctionVoid(string signature, string binarypath) : base(signature, binarypath, DataType.DATA_TYPE_VOID,
+        new[] { typeof(T1).ToValidDataType() })
+    {
+    }
+
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
         new[] { typeof(T1).ToValidDataType() })
     {
     }
@@ -51,6 +60,11 @@ public class MemoryFunctionVoid<T1, T2> : BaseMemoryFunction
     {
     }
 
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
+        new[] { typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType() })
+    {
+    }
+
     public void Invoke(T1 arg1, T2 arg2)
     {
         InvokeInternalVoid(arg1, arg2);
@@ -66,6 +80,11 @@ public class MemoryFunctionVoid<T1, T2, T3> : BaseMemoryFunction
 
     public MemoryFunctionVoid(string signature, string binarypath) : base(signature, binarypath, DataType.DATA_TYPE_VOID,
         new[] { typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(), typeof(T3).ToValidDataType() })
+    {
+    }
+
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
+        new[] {  typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(), typeof(T3).ToValidDataType() })
     {
     }
 
@@ -87,6 +106,15 @@ public class MemoryFunctionVoid<T1, T2, T3, T4> : BaseMemoryFunction
     }
 
     public MemoryFunctionVoid(string signature, string binarypath) : base(signature, binarypath, DataType.DATA_TYPE_VOID,
+        new[]
+        {
+            typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
+            typeof(T3).ToValidDataType(), typeof(T4).ToValidDataType()
+        })
+    {
+    }
+
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
         new[]
         {
             typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
@@ -123,6 +151,16 @@ public class MemoryFunctionVoid<T1, T2, T3, T4, T5> : BaseMemoryFunction
     {
     }
 
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
+        new[]
+        {
+            typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
+            typeof(T3).ToValidDataType(), typeof(T4).ToValidDataType(),
+            typeof(T5).ToValidDataType()
+        })
+    {
+    }
+
     public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
     {
         InvokeInternalVoid(arg1, arg2, arg3, arg4, arg5);
@@ -142,6 +180,16 @@ public class MemoryFunctionVoid<T1, T2, T3, T4, T5, T6> : BaseMemoryFunction
     }
 
     public MemoryFunctionVoid(string signature, string binarypath) : base(signature, binarypath, DataType.DATA_TYPE_VOID,
+        new[]
+        {
+            typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
+            typeof(T3).ToValidDataType(), typeof(T4).ToValidDataType(),
+            typeof(T5).ToValidDataType(), typeof(T6).ToValidDataType()
+        })
+    {
+    }
+
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
         new[]
         {
             typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
@@ -181,6 +229,17 @@ public class MemoryFunctionVoid<T1, T2, T3, T4, T5, T6, T7> : BaseMemoryFunction
     {
     }
 
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
+        new[]
+        {
+            typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
+            typeof(T3).ToValidDataType(), typeof(T4).ToValidDataType(),
+            typeof(T5).ToValidDataType(), typeof(T6).ToValidDataType(),
+            typeof(T7).ToValidDataType()
+        })
+    {
+    }
+
     public void Invoke(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
     {
         InvokeInternalVoid(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
@@ -190,6 +249,17 @@ public class MemoryFunctionVoid<T1, T2, T3, T4, T5, T6, T7> : BaseMemoryFunction
 public class MemoryFunctionVoid<T1, T2, T3, T4, T5, T6, T7, T8> : BaseMemoryFunction
 {
     public MemoryFunctionVoid(string signature) : base(signature, DataType.DATA_TYPE_VOID,
+        new[]
+        {
+            typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
+            typeof(T3).ToValidDataType(), typeof(T4).ToValidDataType(),
+            typeof(T5).ToValidDataType(), typeof(T6).ToValidDataType(),
+            typeof(T7).ToValidDataType(), typeof(T8).ToValidDataType()
+        })
+    {
+    }
+
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
         new[]
         {
             typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
@@ -220,6 +290,18 @@ public class MemoryFunctionVoid<T1, T2, T3, T4, T5, T6, T7, T8> : BaseMemoryFunc
 public class MemoryFunctionVoid<T1, T2, T3, T4, T5, T6, T7, T8, T9> : BaseMemoryFunction
 {
     public MemoryFunctionVoid(string signature) : base(signature, DataType.DATA_TYPE_VOID,
+        new[]
+        {
+            typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
+            typeof(T3).ToValidDataType(), typeof(T4).ToValidDataType(),
+            typeof(T5).ToValidDataType(), typeof(T6).ToValidDataType(),
+            typeof(T7).ToValidDataType(), typeof(T8).ToValidDataType(),
+            typeof(T9).ToValidDataType()
+        })
+    {
+    }
+
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
         new[]
         {
             typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
@@ -264,6 +346,18 @@ public class MemoryFunctionVoid<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : BaseM
     }
 
     public MemoryFunctionVoid(string signature, string binarypath) : base(signature, binarypath, DataType.DATA_TYPE_VOID,
+        new[]
+        {
+            typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),
+            typeof(T3).ToValidDataType(), typeof(T4).ToValidDataType(),
+            typeof(T5).ToValidDataType(), typeof(T6).ToValidDataType(),
+            typeof(T7).ToValidDataType(), typeof(T8).ToValidDataType(),
+            typeof(T9).ToValidDataType(), typeof(T10).ToValidDataType()
+        })
+    {
+    }
+
+    internal MemoryFunctionVoid(IntPtr objectPtr, int offset) : base(objectPtr, offset, DataType.DATA_TYPE_VOID,
         new[]
         {
             typeof(T1).ToValidDataType(), typeof(T2).ToValidDataType(),

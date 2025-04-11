@@ -233,14 +233,11 @@ void ValveFunction::Call(ScriptContext& script_context, int offset)
     }
 }
 
-extern "C" void HookHandler()
+void HookHandler()
 {
-    void* hookedFunctionAddress = RETURN_ADDRESS(); // Or pass explicitly
-    HookHandler(hookedFunctionAddress);
-}
-
-void HookHandler(void* hookedFunctionAddress)
-{
+    // Retrieve the return address
+    void* hookedFunctionAddress = RETURN_ADDRESS();
+    
     // Retrieve the ValveFunction instance from the global map
     auto it = g_HookMap.find(hookedFunctionAddress);
     if (it == g_HookMap.end()) {
@@ -294,7 +291,11 @@ void ValveFunction::AddHook(CallbackT callable, bool post)
     auto m_hook = funchook_create();
 
     // Prepare the hook by specifying the target function and the detour function
-    funchook_prepare(m_hook, (void**)&m_ulAddr, (void*)&HookHandler);
+    //funchook_prepare(m_hook, (void**)&m_ulAddr, (void*)&HookHandler);
+    if (funchook_prepare(m_hook, (void**)&m_ulAddr, (void*)&HookHandler) != 0) {
+        CSSHARP_CORE_ERROR("Failed to prepare hook for address {}", m_ulAddr);
+        return;
+    }
 
     // Install the hook
     if (funchook_install(m_hook, 0) != 0) {

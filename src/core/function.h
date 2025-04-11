@@ -103,6 +103,9 @@ public:
 
     int m_offset;
     const char* m_signature;
+
+    ScriptContext* m_scriptContext = nullptr; // Script context (newly added)
+
     ScriptCallback* m_precallback = nullptr;
     ScriptCallback* m_postcallback = nullptr;
 };

@@ -69,7 +69,7 @@ int GetDynCallConvention(Convention_t eConv)
 
 ValveFunction::ValveFunction(void* ulAddr, Convention_t callingConvention,
                              std::vector<DataType_t> args, DataType_t returnType)
-    : m_ulAddr(ulAddr)
+    : m_ulAddr(ulAddr), m_scriptContext(nullptr)
 {
     m_Args = args;
 
@@ -82,7 +82,7 @@ ValveFunction::ValveFunction(void* ulAddr, Convention_t callingConvention,
 
 ValveFunction::ValveFunction(void* ulAddr, Convention_t callingConvention, DataType_t* args,
                              int argCount, DataType_t returnType)
-    : m_ulAddr(ulAddr)
+    : m_ulAddr(ulAddr), m_scriptContext(nullptr)
 
 {
     m_Args = std::vector<DataType_t>(args, args + argCount);
@@ -258,7 +258,7 @@ void HookHandler()
     }
 
     // Call the original function
-    vf->Call(vf->m_scriptContext, 0);
+    vf->Call(*vf->m_scriptContext, 0);
 
     // Execute post-callbacks
     if (vf->m_postcallback != nullptr) {

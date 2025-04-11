@@ -38,7 +38,7 @@
 namespace counterstrikesharp {
 
 DCCallVM* g_pCallVM = dcNewCallVM(4096);
-std::map<dyno::IHook*, ValveFunction*> g_HookMap;
+std::map<void*, ValveFunction*> g_HookMap;
 
 // ============================================================================
 // >> GetDynCallConvention

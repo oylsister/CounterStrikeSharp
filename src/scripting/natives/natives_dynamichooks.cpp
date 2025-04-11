@@ -21,66 +21,78 @@
 #include "scripting/script_engine.h"
 #include "core/function.h"
 #include "pch.h"
-#include "dynohook/core.h"
-#include "dynohook/manager.h"
+#include <funchook.h>
 
 // clang-format on
 
 namespace counterstrikesharp {
 
+struct HookMetadata {
+    void* originalFunction; // Pointer to the original function
+    std::vector<void*> arguments; // Arguments passed to the function
+    void* returnValue; // Return value of the function
+};
+
+std::map<void*, HookMetadata> g_HookMetadataMap; // Global map to track hooks
+
 void DHookGetReturn(ScriptContext& script_context)
 {
-    auto hook = script_context.GetArgument<dyno::IHook*>(0);
+    auto hookAddress = script_context.GetArgument<void*>(0);
     auto dataType = script_context.GetArgument<DataType_t>(1);
-    if (hook == nullptr) {
+
+    auto it = g_HookMetadataMap.find(hookAddress);
+    if (it == g_HookMetadataMap.end()) {
         script_context.ThrowNativeError("Invalid hook");
+        return;
     }
+
+    auto& metadata = it->second;
 
     switch (dataType) {
     case DATA_TYPE_BOOL:
-        script_context.SetResult(hook->getReturn<bool>());
+        script_context.SetResult(*reinterpret_cast<bool*>(metadata.returnValue));
         break;
     case DATA_TYPE_CHAR:
-        script_context.SetResult(hook->getReturn<char>());
+        script_context.SetResult(*reinterpret_cast<char*>(metadata.returnValue));
         break;
     case DATA_TYPE_UCHAR:
-        script_context.SetResult(hook->getReturn<unsigned char>());
+        script_context.SetResult(*reinterpret_cast<unsigned char*>(metadata.returnValue));
         break;
     case DATA_TYPE_SHORT:
-        script_context.SetResult(hook->getReturn<short>());
+        script_context.SetResult(*reinterpret_cast<short*>(metadata.returnValue));
         break;
     case DATA_TYPE_USHORT:
-        script_context.SetResult(hook->getReturn<unsigned short>());
+        script_context.SetResult(*reinterpret_cast<unsigned short*>(metadata.returnValue));
         break;
     case DATA_TYPE_INT:
-        script_context.SetResult(hook->getReturn<int>());
+        script_context.SetResult(*reinterpret_cast<int*>(metadata.returnValue));
         break;
     case DATA_TYPE_UINT:
-        script_context.SetResult(hook->getReturn<unsigned int>());
+        script_context.SetResult(*reinterpret_cast<unsigned int*>(metadata.returnValue));
         break;
     case DATA_TYPE_LONG:
-        script_context.SetResult(hook->getReturn<long>());
+        script_context.SetResult(*reinterpret_cast<long*>(metadata.returnValue));
         break;
     case DATA_TYPE_ULONG:
-        script_context.SetResult(hook->getReturn<unsigned long>());
+        script_context.SetResult(*reinterpret_cast<unsigned long*>(metadata.returnValue));
         break;
     case DATA_TYPE_LONG_LONG:
-        script_context.SetResult(hook->getReturn<long long>());
+        script_context.SetResult(*reinterpret_cast<long long*>(metadata.returnValue));
         break;
     case DATA_TYPE_ULONG_LONG:
-        script_context.SetResult(hook->getReturn<unsigned long long>());
+        script_context.SetResult(*reinterpret_cast<unsigned long long*>(metadata.returnValue));
         break;
     case DATA_TYPE_FLOAT:
-        script_context.SetResult(hook->getReturn<float>());
+        script_context.SetResult(*reinterpret_cast<float*>(metadata.returnValue));
         break;
     case DATA_TYPE_DOUBLE:
-        script_context.SetResult(hook->getReturn<double>());
+        script_context.SetResult(*reinterpret_cast<double*>(metadata.returnValue));
         break;
     case DATA_TYPE_POINTER:
-        script_context.SetResult(hook->getReturn<void*>());
+        script_context.SetResult(*reinterpret_cast<void**>(metadata.returnValue));
         break;
     case DATA_TYPE_STRING:
-        script_context.SetResult(hook->getReturn<const char*>());
+        script_context.SetResult(*reinterpret_cast<const char**>(metadata.returnValue));
         break;
     default:
         assert(!"Unknown function parameter type!");
@@ -90,59 +102,63 @@ void DHookGetReturn(ScriptContext& script_context)
 
 void DHookSetReturn(ScriptContext& script_context)
 {
-    auto hook = script_context.GetArgument<dyno::IHook*>(0);
+    auto hookAddress = script_context.GetArgument<void*>(0);
     auto dataType = script_context.GetArgument<DataType_t>(1);
-    if (hook == nullptr) {
+
+    auto it = g_HookMetadataMap.find(hookAddress);
+    if (it == g_HookMetadataMap.end()) {
         script_context.ThrowNativeError("Invalid hook");
+        return;
     }
 
+    auto& metadata = it->second;
     auto valueIndex = 2;
 
     switch (dataType) {
     case DATA_TYPE_BOOL:
-        hook->setReturn(script_context.GetArgument<bool>(valueIndex));
+        metadata.returnValue = new bool(script_context.GetArgument<bool>(valueIndex));
         break;
     case DATA_TYPE_CHAR:
-        hook->setReturn(script_context.GetArgument<char>(valueIndex));
+        metadata.returnValue = new char(script_context.GetArgument<char>(valueIndex));
         break;
     case DATA_TYPE_UCHAR:
-        hook->setReturn(script_context.GetArgument<unsigned char>(valueIndex));
+        metadata.returnValue = new unsigned char(script_context.GetArgument<unsigned char>(valueIndex));
         break;
     case DATA_TYPE_SHORT:
-        hook->setReturn(script_context.GetArgument<short>(valueIndex));
+        metadata.returnValue = new short(script_context.GetArgument<short>(valueIndex));
         break;
     case DATA_TYPE_USHORT:
-        hook->setReturn(script_context.GetArgument<unsigned short>(valueIndex));
+        metadata.returnValue = new unsigned short(script_context.GetArgument<unsigned short>(valueIndex));
         break;
     case DATA_TYPE_INT:
-        hook->setReturn(script_context.GetArgument<int>(valueIndex));
+        metadata.returnValue = new int(script_context.GetArgument<int>(valueIndex));
         break;
     case DATA_TYPE_UINT:
-        hook->setReturn(script_context.GetArgument<unsigned int>(valueIndex));
+        metadata.returnValue = new unsigned int(script_context.GetArgument<unsigned int>(valueIndex));
         break;
     case DATA_TYPE_LONG:
-        hook->setReturn(script_context.GetArgument<long>(valueIndex));
+        metadata.returnValue = new long(script_context.GetArgument<long>(valueIndex));
         break;
     case DATA_TYPE_ULONG:
-        hook->setReturn(script_context.GetArgument<unsigned long>(valueIndex));
+        metadata.returnValue = new unsigned long(script_context.GetArgument<unsigned long>(valueIndex));
         break;
     case DATA_TYPE_LONG_LONG:
-        hook->setReturn(script_context.GetArgument<long long>(valueIndex));
+        metadata.returnValue = new long long(script_context.GetArgument<long long>(valueIndex));
         break;
     case DATA_TYPE_ULONG_LONG:
-        hook->setReturn(script_context.GetArgument<unsigned long long>(valueIndex));
+        metadata.returnValue = new unsigned long long(script_context.GetArgument<unsigned long long>(valueIndex));
         break;
     case DATA_TYPE_FLOAT:
-        hook->setReturn(script_context.GetArgument<float>(valueIndex));
+        metadata.returnValue = new float(script_context.GetArgument<float>(valueIndex));
         break;
     case DATA_TYPE_DOUBLE:
-        hook->setReturn(script_context.GetArgument<double>(valueIndex));
+        metadata.returnValue = new double(script_context.GetArgument<double>(valueIndex));
         break;
     case DATA_TYPE_POINTER:
-        hook->setReturn(script_context.GetArgument<void*>(valueIndex));
+        metadata.returnValue = new void*(script_context.GetArgument<void*>(valueIndex));
         break;
     case DATA_TYPE_STRING:
-        hook->setReturn(script_context.GetArgument<const char*>(valueIndex));
+        metadata.returnValue = new const char*(script_context.GetArgument<const char*>(valueIndex));
         break;
     default:
         assert(!"Unknown function parameter type!");

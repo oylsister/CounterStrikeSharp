@@ -32,11 +32,8 @@
 
 #include "scripting/callback_manager.h"
 #include "scripting/script_engine.h"
+#include <vector>
 #include <map>
-
-namespace dyno {
-class Hook;
-}
 
 namespace counterstrikesharp {
 

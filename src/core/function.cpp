@@ -33,14 +33,7 @@
 #include "dyncall/dyncall/dyncall.h"
 
 #include "pch.h"
-#include "dynohook/core.h"
-#include "dynohook/manager.h"
-
-#ifdef _WIN32
-#include "dynohook/conventions/x64_windows_call.h"
-#else
-#include "dynohook/conventions/x64_systemV_call.h"
-#endif
+#include <funchook.h>
 
 namespace counterstrikesharp {
 
@@ -234,62 +227,73 @@ void ValveFunction::Call(ScriptContext& script_context, int offset)
     }
 }
 
-dyno::ReturnAction HookHandler(dyno::CallbackType hookType, dyno::IHook& hook)
+void HookHandler()
 {
-    auto vf = g_HookMap[&hook];
-
-    auto callback = hookType == dyno::CallbackType::Pre ? vf->m_precallback : vf->m_postcallback;
-
-    if (callback == nullptr) {
-        return dyno::ReturnAction::Ignored;
+    // Retrieve the ValveFunction instance from the global map
+    auto it = g_HookMap.find(reinterpret_cast<void*>(_ReturnAddress()));
+    if (it == g_HookMap.end()) {
+        CSSHARP_CORE_ERROR("HookHandler: Unable to find associated ValveFunction.");
+        return;
     }
 
-    callback->Reset();
-    callback->ScriptContext().Push(&hook);
+    ValveFunction* vf = it->second;
 
-    for (auto fnMethodToCall : callback->GetFunctions()) {
-        if (!fnMethodToCall)
-            continue;
-        fnMethodToCall(&callback->ScriptContextStruct());
+    // Execute pre-callbacks
+    if (vf->m_precallback != nullptr) {
+        vf->m_precallback->Reset();
+        vf->m_precallback->ScriptContext().Push(nullptr); // Pass any required context
 
-        auto result = callback->ScriptContext().GetResult<HookResult>();
-        CSSHARP_CORE_TRACE("Received hook callback result of {}, hook mode {}", result,
-                          (int)hookType);
+        for (auto fnMethodToCall : vf->m_precallback->GetFunctions()) {
+            if (!fnMethodToCall)
+                continue;
+            fnMethodToCall(&vf->m_precallback->ScriptContextStruct());
 
-        if (result >= HookResult::Handled) {
-            return dyno::ReturnAction::Supercede;
+            auto result = vf->m_precallback->ScriptContext().GetResult<HookResult>();
+            CSSHARP_CORE_TRACE("Received pre-hook callback result of {}", result);
+
+            if (result >= HookResult::Handled) {
+                return; // Stop execution if the callback handled the hook
+            }
         }
     }
 
-    return dyno::ReturnAction::Ignored;
-}
+    // Call the original function
+    vf->Call(vf->m_scriptContext, 0);
 
-std::vector<dyno::DataObject> ConvertArgsToDynoHook(const std::vector<DataType_t>& dataTypes)
-{
-    std::vector<dyno::DataObject> converted;
-    converted.reserve(dataTypes.size());
+    // Execute post-callbacks
+    if (vf->m_postcallback != nullptr) {
+        vf->m_postcallback->Reset();
+        vf->m_postcallback->ScriptContext().Push(nullptr); // Pass any required context
 
-    for (DataType_t dt : dataTypes) {
-        converted.push_back(dyno::DataObject(static_cast<dyno::DataType>(dt)));
+        for (auto fnMethodToCall : vf->m_postcallback->GetFunctions()) {
+            if (!fnMethodToCall)
+                continue;
+            fnMethodToCall(&vf->m_postcallback->ScriptContextStruct());
+
+            auto result = vf->m_postcallback->ScriptContext().GetResult<HookResult>();
+            CSSHARP_CORE_TRACE("Received post-hook callback result of {}", result);
+        }
     }
-
-    return converted;
 }
 
 void ValveFunction::AddHook(CallbackT callable, bool post)
 {
-    dyno::IHookManager& manager = dyno::HookManager::Get();
-    dyno::IHook* hook = manager.hookDetour((void*)m_ulAddr, [this] {
-#ifdef _WIN32
-        return new dyno::x64WindowsCall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#else
-        return new dyno::x64SystemVcall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#endif
-    }).get();
-    g_HookMap[hook] = this;
-    hook->addCallback(dyno::CallbackType::Post, &HookHandler);
-    hook->addCallback(dyno::CallbackType::Pre, &HookHandler);
+    // Create a funchook instance
+    auto m_hook = funchook_create();
 
+    // Prepare the hook by specifying the target function and the detour function
+    funchook_prepare(m_hook, (void**)&m_ulAddr, (void*)&HookHandler);
+
+    // Install the hook
+    if (funchook_install(m_hook, 0) != 0) {
+        CSSHARP_CORE_ERROR("Failed to install hook for address {}", m_ulAddr);
+        return;
+    }
+
+    // Store the hook in the global map for tracking
+    g_HookMap[m_ulAddr] = this;
+
+    // Manage pre- and post-callbacks
     if (post) {
         if (m_postcallback == nullptr) {
             m_postcallback = globals::callbackManager.CreateCallback("");
@@ -302,17 +306,32 @@ void ValveFunction::AddHook(CallbackT callable, bool post)
         m_precallback->AddListener(callable);
     }
 }
-void ValveFunction::RemoveHook(CallbackT callable, bool post) {
-    dyno::IHookManager& manager = dyno::HookManager::Get();
-    dyno::IHook* hook = manager.hookDetour((void*)m_ulAddr, [this] {
-#ifdef _WIN32
-        return new dyno::x64WindowsCall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#else
-        return new dyno::x64SystemVcall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#endif
-    }).get();
-    g_HookMap[hook] = this;
 
+void ValveFunction::RemoveHook(CallbackT callable, bool post)
+{
+    // Retrieve the hook from the global map
+    auto it = g_HookMap.find(m_ulAddr);
+    if (it == g_HookMap.end()) {
+        CSSHARP_CORE_ERROR("Hook not found for address {}", m_ulAddr);
+        return;
+    }
+
+    // Remove the hook using funchook
+    auto m_hook = funchook_create();
+    if (funchook_prepare(m_hook, (void**)&m_ulAddr, nullptr) != 0) {
+        CSSHARP_CORE_ERROR("Failed to prepare hook for removal at address {}", m_ulAddr);
+        return;
+    }
+
+    if (funchook_install(m_hook, 0) != 0) {
+        CSSHARP_CORE_ERROR("Failed to uninstall hook for address {}", m_ulAddr);
+        return;
+    }
+
+    // Remove the hook from the global map
+    g_HookMap.erase(it);
+
+    // Manage pre- and post-callbacks
     if (post) {
         if (m_postcallback != nullptr) {
             m_postcallback->RemoveListener(callable);

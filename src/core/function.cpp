@@ -35,6 +35,12 @@
 #include "pch.h"
 #include <funchook.h>
 
+#ifdef _WIN32
+    #define RETURN_ADDRESS() _ReturnAddress()
+#else
+    #define RETURN_ADDRESS() __builtin_return_address(0)
+#endif
+
 namespace counterstrikesharp {
 
 DCCallVM* g_pCallVM = dcNewCallVM(4096);
@@ -230,7 +236,7 @@ void ValveFunction::Call(ScriptContext& script_context, int offset)
 void HookHandler()
 {
     // Retrieve the ValveFunction instance from the global map
-    auto it = g_HookMap.find(reinterpret_cast<void*>(_ReturnAddress()));
+    auto it = g_HookMap.find(reinterpret_cast<void*>(RETURN_ADDRESS()));
     if (it == g_HookMap.end()) {
         CSSHARP_CORE_ERROR("HookHandler: Unable to find associated ValveFunction.");
         return;

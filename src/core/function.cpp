@@ -121,56 +121,63 @@ void ValveFunction::Call(ScriptContext& script_context, int offset, bool bypass)
     for (size_t i = 0; i < m_Args.size(); i++)
     {
         int contextIndex = i + offset;
-        switch (m_Args[i])
+        switch (m_Args[i]) {
+        case DATA_TYPE_BOOL:
+            dcArgBool(g_pCallVM, script_context.GetArgument<bool>(contextIndex));
+            break;
+        case DATA_TYPE_CHAR:
+            dcArgChar(g_pCallVM, script_context.GetArgument<char>(contextIndex));
+            break;
+        case DATA_TYPE_UCHAR:
+            dcArgChar(g_pCallVM, script_context.GetArgument<unsigned char>(contextIndex));
+            break;
+        case DATA_TYPE_SHORT:
+            dcArgShort(g_pCallVM, script_context.GetArgument<short>(contextIndex));
+            break;
+        case DATA_TYPE_USHORT:
+            dcArgShort(g_pCallVM, script_context.GetArgument<unsigned short>(contextIndex));
+            break;
+        case DATA_TYPE_INT:
+            dcArgInt(g_pCallVM, script_context.GetArgument<int>(contextIndex));
+            break;
+        case DATA_TYPE_UINT:
+            dcArgInt(g_pCallVM, script_context.GetArgument<unsigned int>(contextIndex));
+            break;
+        case DATA_TYPE_LONG:
+            dcArgLong(g_pCallVM, script_context.GetArgument<long>(contextIndex));
+            break;
+        case DATA_TYPE_ULONG:
+            dcArgLong(g_pCallVM, script_context.GetArgument<unsigned long>(contextIndex));
+            break;
+        case DATA_TYPE_LONG_LONG:
+            dcArgLongLong(g_pCallVM, script_context.GetArgument<long long>(contextIndex));
+            break;
+        case DATA_TYPE_ULONG_LONG:
+            dcArgLongLong(g_pCallVM, script_context.GetArgument<unsigned long long>(contextIndex));
+            break;
+        case DATA_TYPE_FLOAT:
+            dcArgFloat(g_pCallVM, script_context.GetArgument<float>(contextIndex));
+            break;
+        case DATA_TYPE_DOUBLE:
+            dcArgDouble(g_pCallVM, script_context.GetArgument<double>(contextIndex));
+            break;
+        case DATA_TYPE_POINTER:
+            dcArgPointer(g_pCallVM, script_context.GetArgument<void*>(contextIndex));
+            break;
+        case DATA_TYPE_STRING:
         {
-            case DATA_TYPE_BOOL:
-                dcArgBool(g_pCallVM, script_context.GetArgument<bool>(contextIndex));
-                break;
-            case DATA_TYPE_CHAR:
-                dcArgChar(g_pCallVM, script_context.GetArgument<char>(contextIndex));
-                break;
-            case DATA_TYPE_UCHAR:
-                dcArgChar(g_pCallVM, script_context.GetArgument<unsigned char>(contextIndex));
-                break;
-            case DATA_TYPE_SHORT:
-                dcArgShort(g_pCallVM, script_context.GetArgument<short>(contextIndex));
-                break;
-            case DATA_TYPE_USHORT:
-                dcArgShort(g_pCallVM, script_context.GetArgument<unsigned short>(contextIndex));
-                break;
-            case DATA_TYPE_INT:
-                dcArgInt(g_pCallVM, script_context.GetArgument<int>(contextIndex));
-                break;
-            case DATA_TYPE_UINT:
-                dcArgInt(g_pCallVM, script_context.GetArgument<unsigned int>(contextIndex));
-                break;
-            case DATA_TYPE_LONG:
-                dcArgLong(g_pCallVM, script_context.GetArgument<long>(contextIndex));
-                break;
-            case DATA_TYPE_ULONG:
-                dcArgLong(g_pCallVM, script_context.GetArgument<unsigned long>(contextIndex));
-                break;
-            case DATA_TYPE_LONG_LONG:
-                dcArgLongLong(g_pCallVM, script_context.GetArgument<long long>(contextIndex));
-                break;
-            case DATA_TYPE_ULONG_LONG:
-                dcArgLongLong(g_pCallVM, script_context.GetArgument<unsigned long long>(contextIndex));
-                break;
-            case DATA_TYPE_FLOAT:
-                dcArgFloat(g_pCallVM, script_context.GetArgument<float>(contextIndex));
-                break;
-            case DATA_TYPE_DOUBLE:
-                dcArgDouble(g_pCallVM, script_context.GetArgument<double>(contextIndex));
-                break;
-            case DATA_TYPE_POINTER:
-                dcArgPointer(g_pCallVM, script_context.GetArgument<void*>(contextIndex));
-                break;
-            case DATA_TYPE_STRING:
-                dcArgPointer(g_pCallVM, (void*)script_context.GetArgument<const char*>(contextIndex));
-                break;
-            default:
-                assert(!"Unknown function parameter type!");
-                break;
+            const char* str = script_context.GetArgument<const char*>(contextIndex);
+            if (str == nullptr) {
+                CSSHARP_CORE_ERROR("Invalid string argument at index {}", contextIndex);
+                dcArgPointer(g_pCallVM, nullptr); // Pass a null pointer to avoid crashes
+            } else {
+                dcArgPointer(g_pCallVM, (void*)str);
+            }
+            break;
+        }
+        default:
+            assert(!"Unknown function parameter type!");
+            break;
         }
     }
 

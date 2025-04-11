@@ -233,10 +233,16 @@ void ValveFunction::Call(ScriptContext& script_context, int offset)
     }
 }
 
-void HookHandler()
+extern "C" void HookHandler()
+{
+    void* hookedFunctionAddress = RETURN_ADDRESS(); // Or pass explicitly
+    HookHandler(hookedFunctionAddress);
+}
+
+void HookHandler(void* hookedFunctionAddress)
 {
     // Retrieve the ValveFunction instance from the global map
-    auto it = g_HookMap.find(reinterpret_cast<void*>(RETURN_ADDRESS()));
+    auto it = g_HookMap.find(hookedFunctionAddress);
     if (it == g_HookMap.end()) {
         CSSHARP_CORE_ERROR("HookHandler: Unable to find associated ValveFunction.");
         return;

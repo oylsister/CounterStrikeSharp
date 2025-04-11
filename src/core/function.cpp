@@ -170,8 +170,16 @@ void ValveFunction::Call(ScriptContext& script_context, int offset)
             dcArgPointer(g_pCallVM, script_context.GetArgument<void*>(contextIndex));
             break;
         case DATA_TYPE_STRING:
-            dcArgPointer(g_pCallVM, (void*)script_context.GetArgument<const char*>(contextIndex));
+        {
+            const char* str = script_context.GetArgument<const char*>(contextIndex);
+            if (str == nullptr) {
+                CSSHARP_CORE_ERROR("Invalid string argument at index {}", contextIndex);
+                dcArgPointer(g_pCallVM, nullptr); // Pass a null pointer to avoid crashes
+            } else {
+                dcArgPointer(g_pCallVM, (void*)str);
+            }
             break;
+        }
         default:
             assert(!"Unknown function parameter type!");
             break;

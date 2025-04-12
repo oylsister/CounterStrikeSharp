@@ -57,6 +57,16 @@ void EntityManager::OnAllInitialized()
         return;
     }
 
+    m_pEntityIdentityAccept = reinterpret_cast<EntityIdentityAccept>(modules::server->FindSignature(
+        globals::gameConfig->GetSignature("CEntityIdentity_AcceptInput")));
+
+    if (m_pEntityIdentityAccept == nullptr) {
+        CSSHARP_CORE_CRITICAL("Failed to find signature for \'CEntityIdentity_AcceptInput\'");
+        return;
+    }
+
+    on_entity_input_callback = globals::callbackManager.CreateCallback("OnEntityInput");
+
     CEntityInstance_AcceptInput = decltype(CEntityInstance_AcceptInput)(
         modules::server->FindSignature(globals::gameConfig->GetSignature("CEntityInstance_AcceptInput")));
 
@@ -92,6 +102,7 @@ void EntityManager::OnAllInitialized()
 
     auto m_hook = funchook_create();
     funchook_prepare(m_hook, (void**)&m_pFireOutputInternal, (void*)&DetourFireOutputInternal);
+    funchook_prepare(m_hook, (void**)&m_pEntityIdentityAccept, (void*)&DetourEntityIdentityAccept);
     funchook_install(m_hook, 0);
 
     // Listener is added in ServerStartup as entity system is not initialised at this stage.
@@ -280,6 +291,25 @@ void DetourFireOutputInternal(CEntityIOOutput* const pThis, CEntityInstance* pAc
             pCallbackPair->post->ScriptContext().Push(flDelay);
             pCallbackPair->post->Execute();
         }
+    }
+}
+
+void DetourEntityIdentityAccept(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName,
+                              CEntityInstance* pActivator, CEntityInstance* pCaller,
+                              variant_t* value, int nOutputID)
+{
+    m_pEntityIdentityAccept(pThis, pInputName, pActivator, pCaller, value, nOutputID);
+
+    auto callback = globals::entityManager.on_entity_input_callback;
+
+    if (callback && callback->GetFunctionCount()) {
+        callback->ScriptContext().Reset();
+        callback->ScriptContext().Push(pThis);
+        callback->ScriptContext().Push(pInputName->String());
+        callback->ScriptContext().Push(pActivator);
+        callback->ScriptContext().Push(pCaller);
+        callback->ScriptContext().Push(nOutputID);
+        callback->Execute();
     }
 }
 

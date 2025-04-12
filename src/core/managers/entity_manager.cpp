@@ -179,7 +179,25 @@ void CEntityListener::OnEntityParentChanged(CEntityInstance* pEntity, CEntityIns
     }
 }
 
-void EntityManager::HookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode)
+void CEntityListener::OnEntityInput(CEntityInstance* pThis, const char* pInputName,
+                                 CEntityInstance* pActivator, CEntityInstance* pCaller,
+                                 variant_t* value, int nOutputID)
+{
+    auto callback = globals::entityManager.on_entity_input_callback;
+
+    if (callback && callback->GetFunctionCount()) {
+        callback->ScriptContext().Reset();
+        callback->ScriptContext().Push(pThis);
+        callback->ScriptContext().Push(pInputName);
+        callback->ScriptContext().Push(pActivator);
+        callback->ScriptContext().Push(pCaller);
+        callback->ScriptContext().Push(nOutputID);
+        callback->Execute();
+    }
+}
+
+void EntityManager::HookEntityOutput(const char* szClassname, const char* szOutput,
+                                     CallbackT fnCallback, HookMode mode)
 {
     auto outputKey = OutputKey_t(szClassname, szOutput);
     CallbackPair* pCallbackPair;
@@ -341,17 +359,7 @@ void DetourEntityIdentityAccept(CEntityIdentity* pThis, CUtlSymbolLarge* pInputN
 {
     m_pEntityIdentityAccept(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 
-    auto callback = globals::entityManager.on_entity_input_callback;
-
-    if (callback && callback->GetFunctionCount()) {
-        callback->ScriptContext().Reset();
-        callback->ScriptContext().Push(pThis);
-        callback->ScriptContext().Push(pInputName->String());
-        callback->ScriptContext().Push(pActivator);
-        callback->ScriptContext().Push(pCaller);
-        callback->ScriptContext().Push(nOutputID);
-        callback->Execute();
-    }
+    globals::entityManager.entityListener.OnEntityInput(pThis, pInputName, pActivator, pCaller, nOutputID);
 }
 
 SndOpEventGuid_t EntityEmitSoundFilter(IRecipientFilter& filter, uint32 ent, const char* pszSound, float flVolume, float flPitch)

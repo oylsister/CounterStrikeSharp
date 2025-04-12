@@ -39,6 +39,8 @@ class CEntityListener : public IEntityListener {
     void OnEntityCreated(CEntityInstance *pEntity) override;
     void OnEntityDeleted(CEntityInstance *pEntity) override;
     void OnEntityParentChanged(CEntityInstance *pEntity, CEntityInstance *pNewParent) override;
+    void OnEntityInput(CEntityInstance *pThis, const char *pInputName, CEntityInstance *pActivator,
+                       CEntityInstance *pCaller, variant_t *value, int nOutputID) override;
 };
 
 class CCheckTransmitInfoList {

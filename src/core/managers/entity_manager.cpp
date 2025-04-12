@@ -179,7 +179,7 @@ void CEntityListener::OnEntityParentChanged(CEntityInstance* pEntity, CEntityIns
     }
 }
 
-void CEntityListener::OnEntityInput(CEntityInstance* pThis, const char* pInputName,
+void EntityManager::OnEntityInput(CEntityIdentity* pThis, const char* pInputName,
                                  CEntityInstance* pActivator, CEntityInstance* pCaller,
                                  variant_t* value, int nOutputID)
 {
@@ -359,7 +359,7 @@ void DetourEntityIdentityAccept(CEntityIdentity* pThis, CUtlSymbolLarge* pInputN
 {
     m_pEntityIdentityAccept(pThis, pInputName, pActivator, pCaller, value, nOutputID);
 
-    globals::entityManager.entityListener.OnEntityInput(pThis, pInputName, pActivator, pCaller, nOutputID);
+    globals::entityManager.OnEntityInput(pThis, pInputName->String(), pActivator, pCaller, value, nOutputID);
 }
 
 SndOpEventGuid_t EntityEmitSoundFilter(IRecipientFilter& filter, uint32 ent, const char* pszSound, float flVolume, float flPitch)

@@ -94,6 +94,7 @@ class EntityManager : public GlobalClass
     ScriptCallback* on_entity_deleted_callback;
     ScriptCallback* on_entity_parent_changed_callback;
     ScriptCallback* check_transmit;
+    ScriptCallback *on_entity_input_callback;
 
     std::string m_profile_name;
 };
@@ -153,8 +154,15 @@ static void DetourFireOutputInternal(CEntityIOOutput* const pThis,
                                      float flDelay,
                                      void* unk1,
                                      char* unk2);
+typedef void (*EntityIdentityAccept)(CEntityIdentity*, CUtlSymbolLarge*, CEntityInstance*,
+                                       CEntityInstance*, variant_t*, int);
+
+static void DetourEntityIdentityAccept(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName,
+                                       CEntityInstance* pActivator, CEntityInstance* pCaller,
+                                       variant_t* value, int nOutputID);
 
 static FireOutputInternal m_pFireOutputInternal = nullptr;
+static EntityIdentityAccept m_pEntityIdentityAccept = nullptr;
 
 inline void (*CBaseEntity_DispatchSpawn)(void* pEntity, CEntityKeyValues* pKeyValues);
 

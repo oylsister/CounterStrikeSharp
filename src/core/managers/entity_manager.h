@@ -39,13 +39,12 @@ class CEntityListener : public IEntityListener {
     void OnEntityCreated(CEntityInstance *pEntity) override;
     void OnEntityDeleted(CEntityInstance *pEntity) override;
     void OnEntityParentChanged(CEntityInstance *pEntity, CEntityInstance *pNewParent) override;
-    void OnEntityInput(CEntityInstance *pThis, const char *pInputName, CEntityInstance *pActivator,
-                       CEntityInstance *pCaller, variant_t *value, int nOutputID) override;
 };
 
 class CCheckTransmitInfoList {
 public:
     CCheckTransmitInfoList(CCheckTransmitInfo** pInfoInfoList, int nInfoCount);
+    
 private:
     CCheckTransmitInfo** infoList;
     int infoCount;
@@ -60,6 +59,8 @@ public:
     void OnShutdown() override;
     void HookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode);
     void UnhookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode);
+    void OnEntityInput(CEntityIdentity *pThis, const char *pInputName, CEntityInstance *pActivator,
+        CEntityInstance *pCaller, variant_t *value, int nOutputID);
     CEntityListener entityListener;
     std::map<OutputKey_t, CallbackPair*> m_pHookMap;
 private:

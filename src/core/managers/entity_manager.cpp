@@ -26,6 +26,9 @@
 #include "scripting/callback_manager.h"
 
 SH_DECL_HOOK7_void(ISource2GameEntities, CheckTransmit, SH_NOATTRIB, 0, CCheckTransmitInfo**, int, CBitVec<16384>&, const Entity2Networkable_t**, const uint16*, int, bool);
+SH_DECL_MANUALHOOK3_void(DropWeapon, 0, 0, 0, CBasePlayerWeapon*, Vector*, Vector*);
+
+int g_iWeaponServiceDropWeaponId = -1;
 
 namespace counterstrikesharp {
 
@@ -105,6 +108,20 @@ void EntityManager::OnAllInitialized()
     funchook_prepare(m_hook, (void**)&m_pEntityIdentityAccept, (void*)&DetourEntityIdentityAccept);
     funchook_install(m_hook, 0);
 
+    const auto pCCSPlayer_WeaponServicesVTable = modules::server->FindVirtualTable("CCSPlayer_WeaponServices");
+    int offset = globals::gameConfig->GetOffset("CCSPlayer_WeaponServices::DropWeapon");
+
+    if(offset == -1)
+    {
+        CSSHARP_CORE_CRITICAL("Failed to find offset for \'CCSPlayer_WeaponServices::DropWeapon\'");
+        return;
+    }
+
+    SH_MANUALHOOK_RECONFIGURE(DropWeapon, offset, 0, 0);
+	g_iWeaponServiceDropWeaponId = SH_ADD_MANUALDVPHOOK(DropWeapon, pCCSPlayer_WeaponServicesVTable, SH_MEMBER(this, &EntityManager::DropWeaponPost), true);
+
+    on_weapon_drop_callback = globals::callbackManager.CreateCallback("OnDropWeapon");
+
     // Listener is added in ServerStartup as entity system is not initialised at this stage.
 }
 
@@ -118,6 +135,7 @@ void EntityManager::OnShutdown()
     globals::entitySystem->RemoveListenerEntity(&entityListener);
 
     SH_REMOVE_HOOK_MEMFUNC(ISource2GameEntities, CheckTransmit, globals::gameEntities, this, &EntityManager::CheckTransmit, true);
+    SH_REMOVE_HOOK_ID(g_iWeaponServiceDropWeaponId);
 }
 
 void CEntityListener::OnEntitySpawned(CEntityInstance* pEntity)
@@ -177,6 +195,23 @@ void EntityManager::OnEntityInput(CEntityIdentity* pThis, const char* pInputName
         callback->ScriptContext().Push(nOutputID);
         callback->Execute();
     }
+}
+
+void EntityManager::DropWeaponPost(CBasePlayerWeapon* pWeapon, Vector* pVecTarget, Vector* pVelocity)
+{
+    auto pWeaponService = META_IFACEPTR(CCSPlayer_WeaponServices);
+    auto callback = globals::entityManager.on_weapon_drop_callback;
+
+    if (callback && callback->GetFunctionCount()) {
+        callback->ScriptContext().Reset();
+        callback->ScriptContext().Push(pWeaponService);
+        callback->ScriptContext().Push(pWeapon);
+        callback->ScriptContext().Push(pVecTarget);
+        callback->ScriptContext().Push(pVelocity);
+        callback->Execute();
+    }
+
+    RETURN_META(MRES_IGNORED);
 }
 
 void EntityManager::HookEntityOutput(const char* szClassname, const char* szOutput,

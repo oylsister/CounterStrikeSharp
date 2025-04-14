@@ -48,6 +48,9 @@ namespace CounterStrikeSharp.API.Core
         [ListenerName("OnEntityInput")]
         public delegate void OnEntityInput(CEntityIdentity entity, string input, CEntityInstance activator, CEntityInstance caller, int output);
 
+        [ListenerName("OnDropWeapon")]
+        public delegate void OnDropWeapon(CCSPlayer_WeaponServices services, CBasePlayerWeapon weapon, Vector vecTarget, Vector velocity);
+
         /// <summary>
         /// Called on every server tick (64 per second).
         /// This handler should avoid containing expensive operations.

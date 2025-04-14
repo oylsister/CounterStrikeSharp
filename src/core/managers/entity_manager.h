@@ -50,9 +50,6 @@ private:
     int infoCount;
 };
 
-class CBasePlayerWeapon;
-class CCSPlayer_WeaponServices;
-
 class EntityManager : public GlobalClass {
     friend CEntityListener;
 public:
@@ -64,7 +61,6 @@ public:
     void UnhookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode);
     void OnEntityInput(CEntityIdentity *pThis, const char *pInputName, CEntityInstance *pActivator,
         CEntityInstance *pCaller, variant_t *value, int nOutputID);
-    void DropWeaponPost(CBasePlayerWeapon* pWeapon, Vector* pVecTarget, Vector* pVelocity);
     CEntityListener entityListener;
     std::map<OutputKey_t, CallbackPair*> m_pHookMap;
 private:
@@ -76,7 +72,6 @@ private:
     ScriptCallback *on_entity_parent_changed_callback;
     ScriptCallback *check_transmit;
     ScriptCallback *on_entity_input_callback;
-    ScriptCallback *on_weapon_drop_callback;
 
     std::string m_profile_name;
 };

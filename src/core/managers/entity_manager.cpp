@@ -79,6 +79,14 @@ void EntityManager::OnAllInitialized()
     if (!CBaseEntity_EmitSoundFilter)
     {
         CSSHARP_CORE_CRITICAL("Failed to find signature for \'CBaseEntity_EmitSoundFilter\'");
+    CBaseEntity_DispatchSpawn = (decltype(CBaseEntity_DispatchSpawn))(
+        (modules::server->FindSignature(globals::gameConfig->GetSignature("CBaseEntity_DispatchSpawn"))));
+    }
+
+    if (!CBaseEntity_DispatchSpawn) 
+    {
+        CSSHARP_CORE_CRITICAL("Failed to find signature for \'CBaseEntity_DispatchSpawn\'");
+        return;
     }
 
     auto m_hook = funchook_create();

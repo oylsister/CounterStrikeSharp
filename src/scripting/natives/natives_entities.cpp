@@ -294,6 +294,12 @@ SoundEventGuid_t EmitSoundFilter(ScriptContext& script_context)
     return ret.m_nGuid;
 }
 
+void SetNetworkStateChanged(ScriptContext& script_context)
+{
+    auto entity = script_context.GetArgument<CEntityInstance*>(0);
+    entity->NetworkStateChanged();
+}
+
 void DispatchSpawn(ScriptContext& scriptContext)
 {
     auto entity = scriptContext.GetArgument<void*>(0);
@@ -589,6 +595,7 @@ REGISTER_NATIVES(entities, {
     ScriptEngine::RegisterNativeHandler("ACCEPT_INPUT", AcceptInput);
     ScriptEngine::RegisterNativeHandler("ADD_ENTITY_IO_EVENT", AddEntityIOEvent);
     ScriptEngine::RegisterNativeHandler("EMIT_SOUND_FILTER", EmitSoundFilter);
+    ScriptEngine::RegisterNativeHandler("SET_NETWORKSTATE", SetNetworkStateChanged);
     ScriptEngine::RegisterNativeHandler("DISPATCH_SPAWN", DispatchSpawn);
     ScriptEngine::RegisterNativeHandler("ENTITY_KEY_VALUES_NEW", EntityKeyValuesNew);
     ScriptEngine::RegisterNativeHandler("ENTITY_KEY_VALUES_GET_VALUE", EntityKeyValuesGetValue);

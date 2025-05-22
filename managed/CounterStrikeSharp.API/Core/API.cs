@@ -795,7 +795,17 @@ namespace CounterStrikeSharp.API.Core
 			}
 		}
 
-		public static void DispatchSpawn(IntPtr entity, IntPtr keyvalues){
+        public static void SetNetworkstate(IntPtr entity){
+			lock (ScriptContext.GlobalScriptContext.Lock) {
+			ScriptContext.GlobalScriptContext.Reset();
+			ScriptContext.GlobalScriptContext.Push(entity);
+			ScriptContext.GlobalScriptContext.SetIdentifier(0x8C1226B1);
+			ScriptContext.GlobalScriptContext.Invoke();
+			ScriptContext.GlobalScriptContext.CheckErrors();
+			}
+		}
+
+        public static void DispatchSpawn(IntPtr entity, IntPtr keyvalues){
 			lock (ScriptContext.GlobalScriptContext.Lock) {
 			ScriptContext.GlobalScriptContext.Reset();
 			ScriptContext.GlobalScriptContext.Push(entity);
@@ -1745,7 +1755,7 @@ namespace CounterStrikeSharp.API.Core
 			}
 		}
 
-		public static IntPtr Vector2dNew(){
+        public static IntPtr Vector2dNew(){
 			lock (ScriptContext.GlobalScriptContext.Lock) {
 			ScriptContext.GlobalScriptContext.Reset();
 			ScriptContext.GlobalScriptContext.SetIdentifier(0x2CD71169);

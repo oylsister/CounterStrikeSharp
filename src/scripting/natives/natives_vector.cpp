@@ -70,9 +70,6 @@ matrix3x4_t* Matrix3x4New(ScriptContext& script_context) { return new matrix3x4_
 
 Quaternion* QuaternionNew(ScriptContext& script_context) { return new Quaternion(); }
 
-// TODO: These need to be cleared out somehow
-std::vector<QAngle*> managed_angles;
-
 QAngle* AngleNew(ScriptContext& script_context)
 {
     auto ang = new QAngle();

@@ -28,6 +28,8 @@ class CGameSystem : public CBaseGameSystem
 {
   public:
     GS_EVENT(BuildGameSessionManifest);
+    GS_EVENT(ServerPreEntityThink);
+    GS_EVENT(ServerPostEntityThink);
 
     void Shutdown() override
     {
@@ -37,8 +39,7 @@ class CGameSystem : public CBaseGameSystem
 
     void SetGameSystemGlobalPtrs(void* pValue) override
     {
-        if (sm_Factory)
-            sm_Factory->SetGlobalPtr(pValue);
+        if (sm_Factory) sm_Factory->SetGlobalPtr(pValue);
     }
 
     bool DoesGameSystemReallocate() override { return sm_Factory->ShouldAutoAdd(); }

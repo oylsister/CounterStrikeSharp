@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,7 @@ namespace CounterStrikeSharp.API.Core
     /// </summary>
     public enum FunctionLifetime
     {
-        /// <summary>Delegate will be removed after the first invocation.</summary> 
+        /// <summary>Delegate will be removed after the first invocation.</summary>
         SingleUse,
 
         /// <summary>Delegate will remain in memory for the lifetime of the application (or until <see cref="FunctionReference.Remove"/> is called).</summary>
@@ -57,7 +58,7 @@ namespace CounterStrikeSharp.API.Core
             _targetMethod = method;
             _nativeCallback = CreateWrappedCallback();
         }
-        
+
         /// <summary>
         /// <inheritdoc cref="FunctionLifetime"/>
         /// </summary>

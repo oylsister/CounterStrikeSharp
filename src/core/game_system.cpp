@@ -21,8 +21,10 @@
 #include "core/globals.h"
 #include "core/gameconfig.h"
 #include "core/game_system.h"
-
 #include "core/managers/server_manager.h"
+#include "core/managers/player_manager.h"
+#include "scripting/callback_manager.h"
+#include <tier0/vprof.h>
 
 CBaseGameSystemFactory** CBaseGameSystemFactory::sm_pFirst = nullptr;
 
@@ -36,7 +38,8 @@ bool InitGameSystems()
     // bytes so we skip those
     uint8* ptr = (uint8*)counterstrikesharp::globals::gameConfig->ResolveSignature("IGameSystem_InitAllSystems_pFirst") + 3;
 
-    if (!ptr) {
+    if (!ptr)
+    {
         CSSHARP_CORE_ERROR("Failed to InitGameSystems, see warnings above.");
         return false;
     }
@@ -63,4 +66,34 @@ GS_EVENT_MEMBER(CGameSystem, BuildGameSessionManifest)
     CSSHARP_CORE_INFO("CGameSystem::BuildGameSessionManifest");
 
     counterstrikesharp::globals::serverManager.OnPrecacheResources(pResourceManifest);
+}
+
+GS_EVENT_MEMBER(CGameSystem, ServerPreEntityThink)
+{
+    // VPROF_BUDGET("CS#::CGameSystem::ServerPreEntityThink", "CS# On Frame");
+    auto callback = counterstrikesharp::globals::serverManager.on_server_pre_entity_think;
+
+    if (callback && callback->GetFunctionCount())
+    {
+        callback->ScriptContext().Reset();
+        callback->Execute();
+    }
+
+    auto globals = counterstrikesharp::globals::getGlobalVars();
+    if (globals && globals->m_bInSimulation)
+    {
+        counterstrikesharp::globals::playerManager.RunThink();
+    }
+}
+
+GS_EVENT_MEMBER(CGameSystem, ServerPostEntityThink)
+{
+    // VPROF_BUDGET("CS#::CGameSystem::ServerPostEntityThink", "CS# On Frame");
+    auto callback = counterstrikesharp::globals::serverManager.on_server_post_entity_think;
+
+    if (callback && callback->GetFunctionCount())
+    {
+        callback->ScriptContext().Reset();
+        callback->Execute();
+    }
 }

@@ -80,8 +80,7 @@ class EntityManager : public GlobalClass
     std::map<OutputKey_t, CallbackPair*> m_pHookMap;
 
   private:
-    void CheckTransmit(ISource2GameEntities* pThis,
-                       CCheckTransmitInfoHack** ppInfoList,
+    void CheckTransmit(CCheckTransmitInfoHack** ppInfoList,
                        uint32_t infoCount,
                        CBitVec<16384>& unionTransmitEdicts1,
                        CBitVec<16384>& unionTransmitEdicts2,
@@ -173,6 +172,7 @@ inline void (*CEntitySystem_AddEntityIOEvent)(CEntitySystem* pEntitySystem,
                                               variant_t* value,
                                               float delay,
                                               int nOutputID,
+                                              void*,
                                               void*);
 
 typedef uint32 SoundEventGuid_t;

@@ -17,10 +17,11 @@
 using System;
 using System.Runtime.CompilerServices;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Memory;
 
 namespace CounterStrikeSharp.API.Modules.Utils
 {
-    public class Vector2D : NativeObject
+    public class Vector2D : DisposableMemory
     {
         public Vector2D(IntPtr pointer) : base(pointer)
         {

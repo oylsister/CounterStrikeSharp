@@ -1,3 +1,43 @@
+## What's Changed in v1.0.339
+* Fixed offset values of Respawn and Slay for Windows by [@zakriamansoor47](https://github.com/zakriamansoor47) in [#1026](https://github.com/roflmuffin/CounterStrikeSharp/pull/1026) ([54f8d5e](https://github.com/roflmuffin/CounterStrikeSharp/commit/54f8d5ef95dd4aa0ccf118ff734fdf5adf6b4d32))
+
+## New Contributors
+* [@zakriamansoor47](https://github.com/zakriamansoor47) made their first contribution in [#1026](https://github.com/roflmuffin/CounterStrikeSharp/pull/1026)
+
+## What's Changed in v1.0.338
+* Update gamedata.json by [@xLeviNx](https://github.com/xLeviNx) in [#1020](https://github.com/roflmuffin/CounterStrikeSharp/pull/1020) ([72d66cb](https://github.com/roflmuffin/CounterStrikeSharp/commit/72d66cb5d52ccaa87881a40663fb7891007398e0))
+
+## What's Changed in v1.0.337
+* feat(schema): add new schema classes for build 19644975 ([fc7301a](https://github.com/roflmuffin/CounterStrikeSharp/commit/fc7301a8d374ea8888f01703e43fd2d5a8bad488))
+* feat(schema): update schema classes for build 19644975 ([ef4b8f9](https://github.com/roflmuffin/CounterStrikeSharp/commit/ef4b8f9442eee6ddeadcb0fa8775c2eba7108e90))
+* fix: update `FindPickerEntity` implementation (thanks @KillStr3aK) ([245f55d](https://github.com/roflmuffin/CounterStrikeSharp/commit/245f55daf3a474bf95d0e871aa8c4117394593a3))
+* fix(gamedata): update `CBasePlayerController_SetPawn` signature ([936b88d](https://github.com/roflmuffin/CounterStrikeSharp/commit/936b88d57cc8444f22ed2e17e2a1f83e86db37ad))
+
+## What's Changed in v1.0.336
+* fix: re-add GetHitGroup with GameData backed offset ([624ca0f](https://github.com/roflmuffin/CounterStrikeSharp/commit/624ca0f0de35da5fd7f09a7498860a2f697ff59c))
+
+## What's Changed in v1.0.335
+* fix: obsolete `GetHitGroup()` and point to `HitGroupId` schema property ([51b6b45](https://github.com/roflmuffin/CounterStrikeSharp/commit/51b6b45390f9562a3f0d8bdc34af474b28a0e8b1))
+* chore(deps): update hl2sdk ([d5fad8d](https://github.com/roflmuffin/CounterStrikeSharp/commit/d5fad8d80105f8f521a24d63d1ed1d16cbb4dd7e))
+* chore(gamedata): update offsets & signatures ([bf1ce2e](https://github.com/roflmuffin/CounterStrikeSharp/commit/bf1ce2e8a34b0d89b21cfc5180ca9feec6fd64c2))
+* fix: revert MaxPlayers caching ([0761d26](https://github.com/roflmuffin/CounterStrikeSharp/commit/0761d267ba27d3a0c522a030cd512119b3d10ed8))
+
+## What's Changed in v1.0.334
+* fix: update hl2sdk for patch 19602992 (Aug 14 2025) by [@switz](https://github.com/switz) in [#988](https://github.com/roflmuffin/CounterStrikeSharp/pull/988) ([f7c69a6](https://github.com/roflmuffin/CounterStrikeSharp/commit/f7c69a60bea983be132d27cedafd904679b6415c))
+
+## What's Changed in v1.0.333
+* perf: cache `Server.MaxPlayers` to improve performance of `Utilities.GetPlayers()` ([1f9c7a0](https://github.com/roflmuffin/CounterStrikeSharp/commit/1f9c7a090bf39b3bcf54a34a62962de1f4cf501b))
+* feat: add `OnPlayerChat` listener in [#973](https://github.com/roflmuffin/CounterStrikeSharp/pull/973) ([2cf2d45](https://github.com/roflmuffin/CounterStrikeSharp/commit/2cf2d45e8e2f86f6a51c1e7e6c118d9333efea58))
+* chore: apply alliedmodders hl2sdk again in [#974](https://github.com/roflmuffin/CounterStrikeSharp/pull/974) ([fa383cd](https://github.com/roflmuffin/CounterStrikeSharp/commit/fa383cda68e91ff618d2f6e2c67a17b9d25a1a11))
+
+## What's Changed in v1.0.332
+* fix: re-enable `EmitSoundFilter` by [@samyycX](https://github.com/samyycX) in [#968](https://github.com/roflmuffin/CounterStrikeSharp/pull/968) ([dc503e7](https://github.com/roflmuffin/CounterStrikeSharp/commit/dc503e7f57a6d0320f211f00309519555a0cdd29))
+* fix: update GetHitGroup offset by [@wiruwiru](https://github.com/wiruwiru) in [#970](https://github.com/roflmuffin/CounterStrikeSharp/pull/970) ([fedfe75](https://github.com/roflmuffin/CounterStrikeSharp/commit/fedfe756012a2db8c0d4d1fd2161a05ced064924))
+* fix: crash caused by `AddEntityIOEvent` by [@samyycX](https://github.com/samyycX) in [#969](https://github.com/roflmuffin/CounterStrikeSharp/pull/969) ([3508fdf](https://github.com/roflmuffin/CounterStrikeSharp/commit/3508fdfd8c46231a2ff523c8561f7a909cca8db8))
+
+## New Contributors
+* [@wiruwiru](https://github.com/wiruwiru) made their first contribution in [#970](https://github.com/roflmuffin/CounterStrikeSharp/pull/970)
+
 ## What's Changed in v1.0.331
 * fix: revert chat command hooking back to detour of Host_Say ([356152a](https://github.com/roflmuffin/CounterStrikeSharp/commit/356152a567a756da47e6584d05fca331feb849aa))
 

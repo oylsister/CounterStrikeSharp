@@ -18,6 +18,7 @@ add_subdirectory(libraries/funchook)
 add_subdirectory(libraries/SafetyHook)
 include_directories(libraries/SafetyHook/include)
 
+target_compile_features(SafetyHook PUBLIC cxx_std_20)
 set_property(TARGET funchook-static PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 include("makefiles/protobuf.cmake")

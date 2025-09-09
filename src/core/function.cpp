@@ -33,7 +33,7 @@
 #include "dyncall/dyncall/dyncall.h"
 
 #include "pch.h"
-#include "safetyhook/safetyhook.hpp"
+#include "safetyhook.hpp"
 
 namespace counterstrikesharp {
 

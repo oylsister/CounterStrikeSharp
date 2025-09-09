@@ -33,19 +33,13 @@
 #include "dyncall/dyncall/dyncall.h"
 
 #include "pch.h"
-#include "dynohook/core.h"
-#include "dynohook/manager.h"
-
-#ifdef _WIN32
-#include "dynohook/conventions/x64/x64MsFastcall.h"
-#else
-#include "dynohook/conventions/x64/x64SystemVcall.h"
-#endif
+#include "safetyhook/safetyhook.hpp"
 
 namespace counterstrikesharp {
 
 DCCallVM* g_pCallVM = dcNewCallVM(4096);
-std::map<dyno::Hook*, ValveFunction*> g_HookMap;
+std::map<void*, ValveFunction*> g_HookMap;
+std::unique_ptr<SafetyHookInline> m_hook;
 
 // ============================================================================
 // >> GetDynCallConvention
@@ -282,46 +276,55 @@ std::vector<dyno::DataObject> ConvertArgsToDynoHook(const std::vector<DataType_t
 
 void ValveFunction::AddHook(CallbackT callable, bool post)
 {
-    dyno::HookManager& manager = dyno::HookManager::Get();
-    dyno::Hook* hook = manager.hook((void*)m_ulAddr, [this] {
-#ifdef _WIN32
-        return new dyno::x64MsFastcall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#else
-        return new dyno::x64SystemVcall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#endif
-    });
-    g_HookMap[hook] = this;
-    hook->addCallback(dyno::HookType::Post, (dyno::HookHandler*)&HookHandler);
-    hook->addCallback(dyno::HookType::Pre, (dyno::HookHandler*)&HookHandler);
-    m_trampoline = hook->getOriginal();
+    // Create the hook
+    auto hook = SafetyHookInline::Create(m_ulAddr, [this](SafetyHookInlineContext& ctx) {
+        // Pre-callback
+        if (m_precallback)
+        {
+            m_precallback->Reset();
+            m_precallback->ScriptContext().Push(nullptr);
+            for (auto fn : m_precallback->GetFunctions())
+            {
+                if (fn) fn(&m_precallback->ScriptContextStruct());
+            }
+        }
 
+        // Call original
+        ctx.CallOriginal();
+
+        // Post-callback
+        if (m_postcallback)
+        {
+            m_postcallback->Reset();
+            m_postcallback->ScriptContext().Push(nullptr);
+            for (auto fn : m_postcallback->GetFunctions())
+            {
+                if (fn) fn(&m_postcallback->ScriptContextStruct());
+            }
+        }
+    });
+
+    // Store the hook object if you need to remove it later
+    g_HookMap[m_ulAddr] = this;
+    m_hook = std::make_unique<SafetyHookInline>(SafetyHookInline::Create(...));
+
+    // Register callbacks as before
     if (post)
     {
-        if (m_postcallback == nullptr)
-        {
-            m_postcallback = globals::callbackManager.CreateCallback("");
-        }
+        if (!m_postcallback) m_postcallback = globals::callbackManager.CreateCallback("");
         m_postcallback->AddListener(callable);
     }
     else
     {
-        if (m_precallback == nullptr)
-        {
-            m_precallback = globals::callbackManager.CreateCallback("");
-        }
+        if (!m_precallback) m_precallback = globals::callbackManager.CreateCallback("");
         m_precallback->AddListener(callable);
     }
 }
+
 void ValveFunction::RemoveHook(CallbackT callable, bool post)
 {
-    dyno::HookManager& manager = dyno::HookManager::Get();
-    dyno::Hook* hook = manager.hook((void*)m_ulAddr, [this] {
-#ifdef _WIN32
-        return new dyno::x64MsFastcall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#else
-        return new dyno::x64SystemVcall(ConvertArgsToDynoHook(m_Args), static_cast<dyno::DataType>(this->m_eReturnType));
-#endif
-    });
+    m_hook.reset(); // This disables the hook
+
     g_HookMap[hook] = this;
     m_trampoline = nullptr;
 

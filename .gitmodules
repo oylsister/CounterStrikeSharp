@@ -23,3 +23,6 @@
 [submodule "libraries/Protobufs"]
 	path = libraries/Protobufs
 	url = https://github.com/SteamDatabase/Protobufs
+[submodule "libraries/SafetyHook"]
+	path = libraries/SafetyHook
+	url = https://github.com/cursey/SafetyHook.git

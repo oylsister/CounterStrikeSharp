@@ -77,6 +77,8 @@ class EntityManager : public GlobalClass
     void OnShutdown() override;
     void HookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode);
     void UnhookEntityOutput(const char* szClassname, const char* szOutput, CallbackT fnCallback, HookMode mode);
+    void OnEntityInput(CEntityIdentity *pThis, const char *pInputName, CEntityInstance *pActivator,
+        CEntityInstance *pCaller, variant_t *value, int nOutputID);
     CEntityListener entityListener;
     std::map<OutputKey_t, CallbackPair*> m_pHookMap;
 
@@ -94,6 +96,7 @@ class EntityManager : public GlobalClass
     ScriptCallback* on_entity_deleted_callback;
     ScriptCallback* on_entity_parent_changed_callback;
     ScriptCallback* check_transmit;
+    ScriptCallback *on_entity_input_callback;
 
     std::string m_profile_name;
 };
@@ -153,8 +156,17 @@ static void DetourFireOutputInternal(CEntityIOOutput* const pThis,
                                      float flDelay,
                                      void* unk1,
                                      char* unk2);
+typedef void (*EntityIdentityAccept)(CEntityIdentity*, CUtlSymbolLarge*, CEntityInstance*,
+                                       CEntityInstance*, variant_t*, int);
+
+static void DetourEntityIdentityAccept(CEntityIdentity* pThis, CUtlSymbolLarge* pInputName,
+                                       CEntityInstance* pActivator, CEntityInstance* pCaller,
+                                       variant_t* value, int nOutputID);
 
 static FireOutputInternal m_pFireOutputInternal = nullptr;
+static EntityIdentityAccept m_pEntityIdentityAccept = nullptr;
+
+inline void (*CBaseEntity_DispatchSpawn)(void* pEntity, CEntityKeyValues* pKeyValues);
 
 // Do it in here because i didn't found a good place to do this
 inline void (*CEntityInstance_AcceptInput)(CEntityInstance* pThis,

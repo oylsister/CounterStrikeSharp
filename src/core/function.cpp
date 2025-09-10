@@ -302,7 +302,7 @@ void ValveFunction::AddHook(CallbackT callable, bool post)
 
     hook->addCallback(dyno::CallbackType::Post, &HookHandler);
     hook->addCallback(dyno::CallbackType::Pre, &HookHandler);
-    m_trampoline = hook->getOriginal();
+    m_trampoline = reinterpret_cast<void*>(hook->getAddress());
 
     if (post)
     {

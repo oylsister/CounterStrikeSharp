@@ -98,7 +98,31 @@ ValveFunction::ValveFunction(void* ulAddr, Convention_t callingConvention, DataT
     m_iCallingConvention = GetDynCallConvention(m_eCallingConvention);
 }
 
-ValveFunction::~ValveFunction() {}
+ValveFunction::~ValveFunction()
+{
+    if (m_precallback) {
+        delete m_precallback;
+        m_precallback = nullptr;
+    }
+    if (m_postcallback) {
+        delete m_postcallback;
+        m_postcallback = nullptr;
+    }
+}
+
+// Add this to your namespace or a manager class
+static std::map<void*, ValveFunction*> g_ValveFunctionCache;
+
+ValveFunction* GetOrCreateValveFunction(void* ulAddr, Convention_t callingConvention, std::vector<DataType_t> args, DataType_t returnType)
+{
+    auto it = g_ValveFunctionCache.find(ulAddr);
+    if (it != g_ValveFunctionCache.end()) {
+        return it->second;
+    }
+    ValveFunction* func = new ValveFunction(ulAddr, callingConvention, args, returnType);
+    g_ValveFunctionCache[ulAddr] = func;
+    return func;
+}
 
 bool ValveFunction::IsCallable() { return (m_eCallingConvention != CONV_CUSTOM) && (m_iCallingConvention != -1); }
 

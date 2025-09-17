@@ -114,4 +114,6 @@ class ValveFunction
     ScriptCallback* m_postcallback = nullptr;
 };
 
+ValveFunction* GetOrCreateValveFunction(void* ulAddr, Convention_t callingConvention, std::vector<DataType_t> args, DataType_t returnType);
+
 } // namespace counterstrikesharp

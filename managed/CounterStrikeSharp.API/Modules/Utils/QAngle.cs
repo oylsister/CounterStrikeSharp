@@ -14,12 +14,14 @@
  *  along with CounterStrikeSharp.  If not, see <https://www.gnu.org/licenses/>. *
  */
 
+using CounterStrikeSharp.API.Modules.Memory;
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace CounterStrikeSharp.API.Modules.Utils
 {
-    public class QAngle : NativeObject
+    public class QAngle : DisposableMemory
     {
         public static readonly QAngle Zero = new();
 

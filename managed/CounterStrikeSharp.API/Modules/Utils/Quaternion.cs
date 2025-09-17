@@ -17,10 +17,11 @@
 using System;
 using System.Runtime.CompilerServices;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Memory;
 
 namespace CounterStrikeSharp.API.Modules.Utils
 {
-    public class Quaternion : NativeObject
+    public class Quaternion : DisposableMemory
     {
         public Quaternion(IntPtr pointer) : base(pointer)
         {

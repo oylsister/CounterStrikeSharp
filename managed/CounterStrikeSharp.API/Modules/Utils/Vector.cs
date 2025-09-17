@@ -16,6 +16,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using CounterStrikeSharp.API.Modules.Memory;
 
 namespace CounterStrikeSharp.API.Modules.Utils
 {
@@ -28,7 +29,7 @@ namespace CounterStrikeSharp.API.Modules.Utils
     /// <item><term>Z</term><description>+up/-down</description></item>
     /// </list>
     /// </summary>
-    public class Vector : NativeObject,
+    public class Vector : DisposableMemory,
         IAdditionOperators<Vector, Vector, Vector>,
         ISubtractionOperators<Vector, Vector, Vector>,
         IMultiplyOperators<Vector, float, Vector>,

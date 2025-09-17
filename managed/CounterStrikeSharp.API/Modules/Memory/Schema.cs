@@ -100,7 +100,14 @@ public class Schema
     {
         if (pointer == IntPtr.Zero) throw new ArgumentNullException(nameof(pointer), "Schema target points to null.");
 
-        return (T)Activator.CreateInstance(typeof(T), pointer + GetSchemaOffset(className, memberName));
+        object? instance = Activator.CreateInstance(typeof(T), pointer + GetSchemaOffset(className, memberName));
+
+        if (DisposableMemory.IsDisposableType(typeof(T)))
+        {
+            DisposableMemory.MarkAsPure(instance);
+        }
+
+        return (T)instance;
     }
 
     public static unsafe ref T GetRef<T>(IntPtr pointer, string className, string memberName)

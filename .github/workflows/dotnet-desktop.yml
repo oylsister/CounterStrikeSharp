@@ -11,14 +11,25 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     outputs:
-      buildnumber: ${{ steps.buildnumber.outputs.build_number }}
+      gitversion_semver: ${{ steps.gitversion.outputs.semVer }}
+      gitversion_fullsemver: ${{ steps.gitversion.outputs.fullSemVer }}
+      gitversion_assemblysemver: ${{ steps.gitversion.outputs.assemblySemVer }}
+      gitversion_informationalversion: ${{ steps.gitversion.outputs.informationalVersion }}
     steps:
-      - name: Generate build number
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        id: buildnumber
-        uses: onyxmueller/build-tag-number@v1
-        with:
-          token: ${{secrets.github_token}}
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v1
+      with:
+        versionSpec: 6.0.x
+
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Execute GitVersion
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v1
+      with:
+        useConfigFile: true
 
   build_windows:
     needs: setup
@@ -26,16 +37,9 @@ jobs:
     steps:
       - name: Prepare env
         shell: bash
-        run: echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-      - name: Fallback build number
-        if: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
-        shell: bash
-        run: echo "BUILD_NUMBER=0" >> $GITHUB_ENV
-
-      - name: Main build number
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: echo "BUILD_NUMBER=${{ needs.setup.outputs.buildnumber }}" >> $GITHUB_ENV
+        run: | 
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "SEMVER=${{ needs.setup.outputs.gitversion_semver }}" >> $GITHUB_ENV
 
       - name: Visual Studio environment
         shell: cmd
@@ -50,7 +54,7 @@ jobs:
             echo>>"%GITHUB_ENV%" %%a=%%b
           )
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: "recursive"
 
@@ -70,7 +74,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: counterstrikesharp-build-windows-${{ env.GITHUB_SHA_SHORT }}
+          name: counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}
           path: build/output/
 
   build_linux:
@@ -82,18 +86,11 @@ jobs:
     steps:
       - name: Prepare env
         shell: bash
-        run: echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "SEMVER=${{ needs.setup.outputs.gitversion_semver }}" >> $GITHUB_ENV
 
-      - name: Fallback build number
-        if: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
-        shell: bash
-        run: echo "BUILD_NUMBER=0" >> $GITHUB_ENV
-
-      - name: Main build number
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: echo "BUILD_NUMBER=${{ needs.setup.outputs.buildnumber }}" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: "recursive"
 
@@ -111,7 +108,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: counterstrikesharp-build-linux-${{ env.GITHUB_SHA_SHORT }}
+          name: counterstrikesharp-linux-${{ needs.setup.outputs.gitversion_semver }}
           path: build/output/
 
   build_managed:
@@ -124,20 +121,11 @@ jobs:
         shell: bash
         run: echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-      - name: Fallback build number
-        if: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
-        shell: bash
-        run: echo "BUILD_NUMBER=0" >> $GITHUB_ENV
-
-      - name: Main build number
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: echo "BUILD_NUMBER=${{ needs.setup.outputs.buildnumber }}" >> $GITHUB_ENV
-
       # We don't need expensive submodules for the managed side.
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Build runtime v${{ env.BUILD_NUMBER }}
-        uses: actions/setup-dotnet@v3
+      - name: Build runtime v${{ needs.setup.outputs.gitversion_semver }}
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
@@ -145,27 +133,36 @@ jobs:
         run: dotnet restore managed/CounterStrikeSharp.sln
 
       - name: Run tests
-        run: dotnet test --logger trx --results-directory "TestResults-${{ env.GITHUB_SHA_SHORT }}" managed/CounterStrikeSharp.API.Tests/CounterStrikeSharp.API.Tests.csproj
+        run: dotnet test --logger trx --results-directory "TestResults-${{ needs.setup.outputs.gitversion_semver }}" managed/CounterStrikeSharp.API.Tests/CounterStrikeSharp.API.Tests.csproj
 
       - name: Upload dotnet test results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ env.GITHUB_SHA_SHORT }}
-          path: TestResults-${{ env.GITHUB_SHA_SHORT }}
+          name: test-results-${{ needs.setup.outputs.gitversion_semver }}
+          path: TestResults-${{ needs.setup.outputs.gitversion_semver }}
         if: ${{ always() }}
 
       - name: Publish artifacts
         run: |
-          dotnet publish -c Release /p:Version=1.0.${{ env.BUILD_NUMBER }} managed/CounterStrikeSharp.API
-          dotnet pack -c Release /p:Version=1.0.${{ env.BUILD_NUMBER }} managed/CounterStrikeSharp.API
+          dotnet publish -c Release \
+          /p:Version=${{ needs.setup.outputs.gitversion_semver }} \
+          /p:AssemblyVersion=${{ needs.setup.outputs.gitversion_assemblySemver }} \
+          /p:InformationalVersion=${{ needs.setup.outputs.gitversion_informationalversion }} \
+          managed/CounterStrikeSharp.API
+          
+          dotnet pack -c Release \
+          /p:Version=${{ needs.setup.outputs.gitversion_semver }} \
+          /p:AssemblyVersion=${{ needs.setup.outputs.gitversion_assemblySemver }} \
+          /p:InformationalVersion=${{ needs.setup.outputs.gitversion_informationalversion }} \
+          managed/CounterStrikeSharp.API
 
       - uses: actions/upload-artifact@v4
         with:
-          name: counterstrikesharp-build-api-${{ env.GITHUB_SHA_SHORT }}
+          name: counterstrikesharp-api-${{ needs.setup.outputs.gitversion_semver }}
           path: managed/CounterStrikeSharp.API/bin/Release
 
   publish:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'roflmuffin/CounterStrikeSharp' }}
     permissions:
       contents: write
     needs: ["setup", "build_linux", "build_windows", "build_managed"]
@@ -175,19 +172,24 @@ jobs:
         shell: bash
         run: echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v4
         with:
-          name: counterstrikesharp-build-windows-${{ env.GITHUB_SHA_SHORT }}
+          name: counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}
           path: build/windows
 
       - uses: actions/download-artifact@v4
         with:
-          name: counterstrikesharp-build-linux-${{ env.GITHUB_SHA_SHORT }}
+          name: counterstrikesharp-linux-${{ needs.setup.outputs.gitversion_semver }}
           path: build/linux
 
       - uses: actions/download-artifact@v4
         with:
-          name: counterstrikesharp-build-api-${{ env.GITHUB_SHA_SHORT }}
+          name: counterstrikesharp-api-${{ needs.setup.outputs.gitversion_semver }}
           path: build/api
 
       # TODO: This stuff should really be in a matrix
@@ -200,8 +202,8 @@ jobs:
 
       - name: Zip Builds
         run: |
-          (cd build/linux && zip -qq -r ../../counterstrikesharp-build-${{ needs.setup.outputs.buildnumber }}-linux-${{ env.GITHUB_SHA_SHORT }}.zip *)
-          (cd build/windows && zip -qq -r ../../counterstrikesharp-build-${{ needs.setup.outputs.buildnumber }}-windows-${{ env.GITHUB_SHA_SHORT }}.zip *)
+          (cd build/linux && zip -qq -r ../../counterstrikesharp-linux-${{ needs.setup.outputs.gitversion_semver }}.zip *)
+          (cd build/windows && zip -qq -r ../../counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}.zip *)
 
       - name: Add dotnet runtime
         run: |
@@ -215,28 +217,44 @@ jobs:
 
       - name: Zip Builds
         run: |
-          (cd build/linux && zip -qq -r ../../counterstrikesharp-with-runtime-build-${{ needs.setup.outputs.buildnumber }}-linux-${{ env.GITHUB_SHA_SHORT }}.zip *)
-          (cd build/windows && zip -qq -r ../../counterstrikesharp-with-runtime-build-${{ needs.setup.outputs.buildnumber }}-windows-${{ env.GITHUB_SHA_SHORT }}.zip *)
+          (cd build/linux && zip -qq -r ../../counterstrikesharp-with-runtime-linux-${{ needs.setup.outputs.gitversion_semver }}.zip *)
+          (cd build/windows && zip -qq -r ../../counterstrikesharp-with-runtime-windows-${{ needs.setup.outputs.gitversion_semver }}.zip *)
+      
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff
+        with:
+            config: cliff.toml
+            args: --current -s footer
 
       - name: Release
         id: release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.setup.outputs.buildnumber }}
+          append_body: true
+          body: |
+            ${{ steps.git-cliff.outputs.content }}
+
+            Please refer to [CHANGELOG.md](https://github.com/roflmuffin/CounterStrikeSharp/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
           files: |
-            counterstrikesharp-build-${{ needs.setup.outputs.buildnumber }}-windows-${{ env.GITHUB_SHA_SHORT }}.zip
-            counterstrikesharp-with-runtime-build-${{ needs.setup.outputs.buildnumber }}-windows-${{ env.GITHUB_SHA_SHORT }}.zip
-            counterstrikesharp-build-${{ needs.setup.outputs.buildnumber }}-linux-${{ env.GITHUB_SHA_SHORT }}.zip
-            counterstrikesharp-with-runtime-build-${{ needs.setup.outputs.buildnumber }}-linux-${{ env.GITHUB_SHA_SHORT }}.zip
+            counterstrikesharp-windows-${{ needs.setup.outputs.gitversion_semver }}.zip
+            counterstrikesharp-with-runtime-windows-${{ needs.setup.outputs.gitversion_semver }}.zip
+            counterstrikesharp-linux-${{ needs.setup.outputs.gitversion_semver }}.zip
+            counterstrikesharp-with-runtime-linux-${{ needs.setup.outputs.gitversion_semver }}.zip
 
       - name: Publish NuGet package
         run: |
-          dotnet nuget push build/api/CounterStrikeSharp.API.1.0.${{ needs.setup.outputs.buildnumber }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-          dotnet nuget push build/api/CounterStrikeSharp.API.1.0.${{ needs.setup.outputs.buildnumber }}.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push build/api/CounterStrikeSharp.API.${{ needs.setup.outputs.gitversion_semver }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push build/api/CounterStrikeSharp.API.${{ needs.setup.outputs.gitversion_semver }}.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Send Notification to Discord
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@0.3.2
         with:
-          args: "A new release of CS# has been tagged (v${{ needs.setup.outputs.buildnumber }}) at ${{ steps.release.outputs.url }}"
+          args: |
+            A new release of CS# has been tagged [v${{ needs.setup.outputs.gitversion_semver }}](${{ steps.release.outputs.url }})
+
+            ${{ steps.git-cliff.outputs.content }}
+
+            Please refer to [CHANGELOG.md](https://github.com/roflmuffin/CounterStrikeSharp/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
